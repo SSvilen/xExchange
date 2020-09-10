@@ -118,6 +118,10 @@ function Get-TargetResource
                 {
                     $returnValue[$property] = [System.String[]] $addressList.$property
                 }
+                elseif ($property -eq 'IncludedRecipients')
+                {
+                    $returnValue[$property] = [System.String[]] $addressList.$property -split ', '
+                }
                 else
                 {
                     $returnValue[$property] = $addressList.$property
@@ -289,7 +293,7 @@ function Set-TargetResource
 
         [Parameter()]
         [ValidateSet('MailboxUsers', 'MailContacts', 'MailGroups', 'MailUsers', 'Resources', 'AllRecipients')]
-        [System.String]
+        [System.String[]]
         $IncludedRecipients,
 
         [Parameter()]
@@ -519,7 +523,7 @@ function Test-TargetResource
 
         [Parameter()]
         [ValidateSet('MailboxUsers', 'MailContacts', 'MailGroups', 'MailUsers', 'Resources', 'AllRecipients')]
-        [System.String]
+        [System.String[]]
         $IncludedRecipients,
 
         [Parameter()]
@@ -566,7 +570,15 @@ function Test-TargetResource
 
         foreach ($property in $DifferenceObjectHashTable.Keys)
         {
-            if (Compare-Object -ReferenceObject $referenceObject -DifferenceObject $differenceObject -Property $property)
+            if ($property -eq 'IncludedRecipients' -or $property -match 'Conditional')
+            {
+                if (!(Test-ExchangeSetting -Name $property -Type 'Array' -ExpectedValue $addressList.$property -ActualValue $DifferenceObjectHashTable.$property -PSBoundParametersIn $PSBoundParameters -Verbose:$VerbosePreference))
+                {
+                    $targetResourceInCompliance = $false
+                    break;
+                }
+            }
+            elseif (Compare-Object -ReferenceObject $referenceObject -DifferenceObject $differenceObject -Property $property)
             {
                 Write-Verbose -Message ("Invalid setting '{0}'. Expected value: {1}. Actual value: {2}" -f $property, $DifferenceObjectHashTable[$property], $addressList[$property])
                 $targetResourceInCompliance = $false

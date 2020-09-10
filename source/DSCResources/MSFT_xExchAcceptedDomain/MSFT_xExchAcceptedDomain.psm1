@@ -285,7 +285,6 @@ function Test-TargetResource
     }
     else
     {
-        $acceptedDomain['MakeDefault'] = $acceptedDomain['Default']
         $acceptedDomain.Remove('Default')
         $referenceObject = [PSCustomObject] $acceptedDomain
         $differenceObject = [PSCustomObject] $DifferenceObjectHashTable
